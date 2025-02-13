@@ -18,6 +18,12 @@
   </properties>
 
   <dependencies>
+    <!-- Gson library για μετατροπή Java σε Json -->
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+      <version>2.10.1</version>
+    </dependency>
 
     <!-- JavaFX Controls & FXML -->
     <dependency>
@@ -70,6 +76,26 @@
         <mainClass>com.myapp.MainApp</mainClass>
     </configuration>
       </plugin>
+      <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <version>3.3.0</version>
+            <configuration>
+                <descriptorRefs>
+                    <descriptorRef>jar-with-dependencies</descriptorRef>
+                </descriptorRefs>
+            </configuration>
+            <executions>
+                <execution>
+                    <id>make-assembly</id>
+                    <phase>package</phase>
+                    <goals>
+                        <goal>single</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+        
     </plugins>
   </build>
 </project>

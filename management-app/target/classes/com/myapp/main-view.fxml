@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.myapp.MainController">
+    
+    <!-- Πάνω μέρος: Τίτλος εφαρμογής -->
+    <top>
+        <Label text="Task Management System" style="-fx-font-size: 20px; -fx-padding: 10px;"/>
+    </top>
+
+    <!-- Κεντρικό περιεχόμενο: Πίνακας με τις εργασίες -->
+    <center>
+        <TableView fx:id="taskTable">
+            <columns>
+                <TableColumn text="Title" fx:id="titleColumn"/>
+                <TableColumn text="Category" fx:id="categoryColumn"/>
+                <TableColumn text="Priority" fx:id="priorityColumn"/>
+                <TableColumn text="Deadline" fx:id="deadlineColumn"/>
+                <TableColumn text="Status" fx:id="statusColumn"/>
+            </columns>
+        </TableView>
+    </center>
+
+    <!-- Κουμπιά Ενεργειών -->
+    <bottom>
+        <HBox spacing="10" alignment="CENTER">
+            <Button text="Add Task" />
+            <Button text="Edit Task"/>
+            <Button text="Delete Task"/>
+            <Button text="Manage Categories" fx:id="manageCategoriesButton"/>
+            <Button text="Manage Priorities" fx:id="managePrioritiesButton"/>
+        </HBox>
+    </bottom>
+</BorderPane>

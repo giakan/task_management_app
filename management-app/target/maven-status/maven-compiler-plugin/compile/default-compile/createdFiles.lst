@@ -4,7 +4,7 @@ com\myapp\data\TaskManager.class
 com\myapp\data\TaskManager$1.class
 com\myapp\model\Category.class
 com\myapp\MainApp.class
+com\myapp\MainController.class
 com\myapp\model\PriorityLevel.class
 com\myapp\utils\LocalDateAdapter.class
-com\myapp\TestJson.class
 com\myapp\model\TaskStatus.class

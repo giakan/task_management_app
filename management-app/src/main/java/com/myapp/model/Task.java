@@ -14,8 +14,7 @@ public class Task {
     private TaskStatus status;
     private List<Reminder> reminders;
 
-    public Task(int id, String title, String description, Category category, PriorityLevel priority, LocalDate deadline) {
-        this.id = id;
+    public Task(String title, String description, Category category, PriorityLevel priority, LocalDate deadline, TaskStatus status) {
         this.title = title;
         this.description = description;
         this.category = category;
@@ -26,7 +25,6 @@ public class Task {
     }
 
     // Getters και Setters
-    public int getId() { return id; }
     public String getTitle() { return title; }
     public String getDescription() { return description; }
     public Category getCategory() { return category; }

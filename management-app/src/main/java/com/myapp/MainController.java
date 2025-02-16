@@ -1,6 +1,5 @@
 package com.myapp;
 
-import com.myapp.data.TaskManager;
 import com.myapp.model.Task;
 import com.myapp.model.Category;
 import com.myapp.model.PriorityLevel;
@@ -27,12 +26,21 @@ public class MainController {
     @FXML private DatePicker deadlineField;
     @FXML private ComboBox<TaskStatus> statusField;
 
-    private TaskManager taskManager;
+    private ObservableList<Task> taskList;
 
-    public MainController() {
-        this.taskManager = new TaskManager();
+    @FXML
+    public void initialize() {
+        // Αρχικοποίηση των στηλών
+        titleColumn.setCellValueFactory(new PropertyValueFactory<>("title"));
+        categoryColumn.setCellValueFactory(new PropertyValueFactory<>("category"));
+        priorityColumn.setCellValueFactory(new PropertyValueFactory<>("priority"));
+        deadlineColumn.setCellValueFactory(new PropertyValueFactory<>("deadline"));
+        statusColumn.setCellValueFactory(new PropertyValueFactory<>("status"));
+
+        // Φορτώνουμε τα δεδομένα
+        taskList = FXCollections.observableArrayList(Task.getAllTasks());
+        taskTable.setItems(taskList);
     }
-    
 
     @FXML
     private void handleAddTask() {
@@ -48,8 +56,8 @@ public class MainController {
         }
 
         Task newTask = new Task(title, "", category, priority, deadline, status);
-        taskManager.addTask(newTask);
-        taskTable.getItems().add(newTask);
+        Task.addTask(newTask); // Προσθήκη στη λίστα
+        taskList.add(newTask); // Ενημέρωση TableView
 
         clearFields();
     }
@@ -62,14 +70,23 @@ public class MainController {
             return;
         }
 
-        if (!titleField.getText().isEmpty()) selectedTask.setTitle(titleField.getText());
-        if (categoryField.getValue() != null) selectedTask.setCategory(categoryField.getValue());
-        if (priorityField.getValue() != null) selectedTask.setPriority(priorityField.getValue());
-        if (deadlineField.getValue() != null) selectedTask.setDeadline(deadlineField.getValue());
-        if (statusField.getValue() != null) selectedTask.setStatus(statusField.getValue());
+        // Ενημέρωση του Task
+        boolean modified = Task.modifyTask(
+                selectedTask.getId(),
+                titleField.getText().isEmpty() ? selectedTask.getTitle() : titleField.getText(),
+                selectedTask.getDescription(),
+                categoryField.getValue() == null ? selectedTask.getCategory() : categoryField.getValue(),
+                priorityField.getValue() == null ? selectedTask.getPriority() : priorityField.getValue(),
+                deadlineField.getValue() == null ? selectedTask.getDeadline() : deadlineField.getValue(),
+                statusField.getValue() == null ? selectedTask.getStatus() : statusField.getValue()
+        );
 
-        taskManager.saveTasks();
-        taskTable.refresh();
+        if (modified) {
+            taskTable.refresh();
+            clearFields();
+        } else {
+            showAlert("Error", "Task modification failed.");
+        }
     }
 
     @FXML
@@ -80,8 +97,12 @@ public class MainController {
             return;
         }
 
-        taskManager.removeTask(selectedTask);
-        taskTable.getItems().remove(selectedTask);
+        boolean deleted = Task.deleteTask(selectedTask.getId());
+        if (deleted) {
+            taskList.remove(selectedTask);
+        } else {
+            showAlert("Error", "Task deletion failed.");
+        }
     }
 
     private void clearFields() {

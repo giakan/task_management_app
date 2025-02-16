@@ -1,38 +1,63 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
 
-<BorderPane xmlns="http://javafx.com/javafx/21"
-            xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.myapp.MainController">
+<BorderPane xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.myapp.MainController">
     
     <!-- Πάνω μέρος: Τίτλος εφαρμογής -->
     <top>
-        <Label text="Task Management System" style="-fx-font-size: 20px; -fx-padding: 10px;"/>
+        <Label style="-fx-font-size: 20px; -fx-padding: 10px;" text="Task Management System" />
     </top>
 
     <!-- Κεντρικό περιεχόμενο: Πίνακας με τις εργασίες -->
     <center>
         <TableView fx:id="taskTable">
             <columns>
-                <TableColumn text="Title" fx:id="titleColumn"/>
-                <TableColumn text="Category" fx:id="categoryColumn"/>
-                <TableColumn text="Priority" fx:id="priorityColumn"/>
-                <TableColumn text="Deadline" fx:id="deadlineColumn"/>
-                <TableColumn text="Status" fx:id="statusColumn"/>
+                <TableColumn fx:id="titleColumn" text="Title" />
+                <TableColumn fx:id="categoryColumn" text="Category" />
+                <TableColumn fx:id="priorityColumn" text="Priority" />
+                <TableColumn fx:id="deadlineColumn" text="Deadline" />
+                <TableColumn fx:id="statusColumn" text="Status" />
             </columns>
         </TableView>
     </center>
 
     <!-- Κουμπιά Ενεργειών -->
     <bottom>
-        <HBox spacing="10" alignment="CENTER">
-            <Button text="Add Task" />
-            <Button text="Edit Task"/>
-            <Button text="Delete Task"/>
-            <Button text="Manage Categories" fx:id="manageCategoriesButton"/>
-            <Button text="Manage Priorities" fx:id="managePrioritiesButton"/>
+        <HBox alignment="CENTER" spacing="10">
+         <MenuBar prefHeight="25.0" prefWidth="262.0">
+    <menus>
+        <Menu mnemonicParsing="false" text="Task">
+            <items>
+                <MenuItem fx:id="addTask" mnemonicParsing="false" text="Add" onAction="#handleAddTask" />
+                <MenuItem fx:id="deleteTask" mnemonicParsing="false" text="Delete" onAction="#handleDeleteTask" />
+                <MenuItem fx:id="modifyTask" mnemonicParsing="false" text="Edit" onAction="#handleEditTask" />
+            </items>
+        </Menu>
+        <Menu mnemonicParsing="false" text="Categories">
+            <items>
+                <MenuItem fx:id="addCategory" mnemonicParsing="false" text="Add" onAction="#handleAddCategory" />
+                <MenuItem fx:id="deleteCategory" mnemonicParsing="false" text="Delete" onAction="#handleDeleteCategory" />
+                <MenuItem fx:id="modifyCategory" mnemonicParsing="false" text="Edit" onAction="#handleEditCategory" />
+            </items>
+        </Menu>
+        <Menu mnemonicParsing="false" text="Priorities">
+            <items>
+                <MenuItem fx:id="addPriority" mnemonicParsing="false" text="Add" onAction="#handleAddPriority" />
+                <MenuItem fx:id="deletePriority" mnemonicParsing="false" text="Delete" onAction="#handleDeletePriority" />
+                <MenuItem fx:id="modifyPriority" mnemonicParsing="false" text="Edit" onAction="#handleEditPriority" />
+            </items>
+        </Menu>
+    </menus>
+</MenuBar>
+
         </HBox>
     </bottom>
 </BorderPane>

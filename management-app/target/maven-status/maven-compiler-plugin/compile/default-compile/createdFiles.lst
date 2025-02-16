@@ -6,5 +6,6 @@ com\myapp\model\Category.class
 com\myapp\MainApp.class
 com\myapp\MainController.class
 com\myapp\model\PriorityLevel.class
+com\myapp\model\Task$1.class
 com\myapp\utils\LocalDateAdapter.class
 com\myapp\model\TaskStatus.class

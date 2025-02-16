@@ -33,6 +33,7 @@
     </dependency>
 
     <!-- JavaFX Controls & FXML -->
+        <!-- JavaFX Dependencies -->
     <dependency>
         <groupId>org.openjfx</groupId>
         <artifactId>javafx-controls</artifactId>
@@ -43,6 +44,17 @@
         <artifactId>javafx-fxml</artifactId>
         <version>21</version>
     </dependency>
+    <dependency>
+        <groupId>org.openjfx</groupId>
+        <artifactId>javafx-base</artifactId>
+        <version>21</version>
+    </dependency>
+    <dependency>
+        <groupId>org.openjfx</groupId>
+        <artifactId>javafx-graphics</artifactId>
+        <version>21</version>
+    </dependency>
+
 
     <!-- JUnit για tests -->
     <dependency>

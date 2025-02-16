@@ -33,6 +33,61 @@ public class Task {
         this.status = status;
     }
 
+    // Getters
+    public int getId() {
+        return id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public Category getCategory() {
+        return category;
+    }
+
+    public PriorityLevel getPriority() {
+        return priority;
+    }
+
+    public LocalDate getDeadline() {
+        return deadline;
+    }
+
+    public TaskStatus getStatus() {
+        return status;
+    }
+
+    // Setters
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+
+    public void setPriority(PriorityLevel priority) {
+        this.priority = priority;
+    }
+
+    public void setDeadline(LocalDate deadline) {
+        this.deadline = deadline;
+    }
+
+    public void setStatus(TaskStatus status) {
+        this.status = status;
+    }
+
+
     // -------------------- Λειτουργίες Διαχείρισης Task --------------------
 
     /** Προσθήκη Task στη λίστα και αποθήκευση στο JSON */

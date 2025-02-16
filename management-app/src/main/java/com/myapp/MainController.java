@@ -30,6 +30,10 @@ public class MainController {
 
     @FXML
     public void initialize() {
+
+        // Φόρτωση των tasks από JSON
+        Task.loadTasksFromJson();
+
         // Αρχικοποίηση των στηλών
         titleColumn.setCellValueFactory(new PropertyValueFactory<>("title"));
         categoryColumn.setCellValueFactory(new PropertyValueFactory<>("category"));

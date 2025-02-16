@@ -84,17 +84,20 @@
         <artifactId>javafx-maven-plugin</artifactId>
         <version>0.0.8</version>
         <executions>
-            <execution>
-                <id>default-cli</id>
-                <goals>
-                    <goal>run</goal>
-                </goals>
-            </execution>
+          <execution>
+            <id>default-cli</id>
+            <goals>
+                <goal>run</goal>
+            </goals>
+          </execution>
         </executions>
         <configuration>
-        <mainClass>com.myapp.MainApp</mainClass>
-    </configuration>
+            <mainClass>com.myapp.MainApp</mainClass>
+           <!-- <modulePath>${env.JAVAFX_HOME}/lib</modulePath> -->
+           <launcher>app</launcher>
+        </configuration>
       </plugin>
+
       <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-assembly-plugin</artifactId>
@@ -103,6 +106,11 @@
                 <descriptorRefs>
                     <descriptorRef>jar-with-dependencies</descriptorRef>
                 </descriptorRefs>
+                <archive>
+                  <manifestEntries>
+                      <Main-Class>com.myapp.MainApp</Main-Class>
+                  </manifestEntries>
+                </archive>
             </configuration>
             <executions>
                 <execution>

@@ -9,6 +9,8 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+
 import java.time.LocalDate;
 
 public class MainController {
@@ -108,6 +110,37 @@ public class MainController {
             showAlert("Error", "Task deletion failed.");
         }
     }
+
+    @FXML
+    private void handleAddCategory(ActionEvent event) {
+        System.out.println("Category added!");
+    }
+
+    @FXML
+    private void handleDeleteCategory(ActionEvent event) {
+        System.out.println("Category deleted!");
+    }
+
+    @FXML
+    private void handleEditCategory(ActionEvent event) {
+        System.out.println("Category edited!");
+    }
+
+    @FXML
+    private void handleAddPriority(ActionEvent event) {
+        System.out.println("Priority added!");
+    }
+
+    @FXML
+    private void handleDeletePriority(ActionEvent event) {
+        System.out.println("Priority deleted!");
+    }
+
+    @FXML
+    private void handleEditPriority(ActionEvent event) {
+        System.out.println("Priority edited!");
+    }
+
 
     private void clearFields() {
         titleField.clear();

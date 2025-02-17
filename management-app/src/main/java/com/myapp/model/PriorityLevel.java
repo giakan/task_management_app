@@ -13,9 +13,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PriorityLevel {
+
+    public PriorityLevel(){
+        
+    }
+
     private String name;
-    private static final String FILE_PATH = "src/main/java/com/myapp/data/priorities.json";
+    private static final String FILE_PATH = "medialab/priorities.json";
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    public static final String DEFAULT_PRIORITY = "Default"; // Προκαθορισμένη προτεραιότητα
 
     public PriorityLevel(String name) {
         this.name = name;
@@ -29,7 +35,8 @@ public class PriorityLevel {
         return name;
     }
 
-    // Μέθοδος για φόρτωμα προτεραιοτήτων από JSON
+    // ---------------- Φόρτωση και Αποθήκευση ----------------
+
     public static List<PriorityLevel> loadPriorities() {
         try (FileReader reader = new FileReader(FILE_PATH)) {
             Type listType = new TypeToken<JsonObject>() {}.getType();
@@ -40,13 +47,19 @@ public class PriorityLevel {
             for (String name : priorityNames) {
                 priorities.add(new PriorityLevel(name));
             }
+
+            // Αν δεν υπάρχει η Default προτεραιότητα, την προσθέτουμε
+            if (priorities.stream().noneMatch(p -> p.getName().equals(DEFAULT_PRIORITY))) {
+                priorities.add(new PriorityLevel(DEFAULT_PRIORITY));
+                savePriorities(priorities);
+            }
+
             return priorities;
         } catch (IOException e) {
             return new ArrayList<>();
         }
     }
 
-    // Μέθοδος για αποθήκευση προτεραιοτήτων σε JSON
     public static void savePriorities(List<PriorityLevel> priorities) {
         JsonObject jsonObject = new JsonObject();
         List<String> priorityNames = new ArrayList<>();
@@ -60,5 +73,19 @@ public class PriorityLevel {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static boolean deletePriority(PriorityLevel priority) {
+        if (priority.getName().equals(DEFAULT_PRIORITY)) {
+            return false; // Δεν μπορεί να διαγραφεί το Default
+        }
+
+        List<PriorityLevel> priorities = loadPriorities();
+        priorities.removeIf(p -> p.getName().equals(priority.getName()));
+        savePriorities(priorities);
+
+        // Αντικατάσταση των σχετικών tasks με Default
+        Task.updatePriorityForDeleted(priority);
+        return true;
     }
 }

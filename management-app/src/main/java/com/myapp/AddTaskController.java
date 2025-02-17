@@ -15,6 +15,7 @@ import java.util.List;
 public class AddTaskController {
 
     @FXML private TextField titleField;
+    @FXML private TextArea descriptionField;
     @FXML private ComboBox<Category> categoryField;
     @FXML private ComboBox<PriorityLevel> priorityField;
     @FXML private DatePicker deadlineField;
@@ -27,24 +28,28 @@ public class AddTaskController {
         categoryField.setItems(FXCollections.observableArrayList(Category.loadCategories()));
         priorityField.setItems(FXCollections.observableArrayList(PriorityLevel.loadPriorities()));
         statusField.setItems(FXCollections.observableArrayList(TaskStatus.values()));
+
+        statusField.setValue(TaskStatus.OPEN);
+
     }
 
     @FXML
     private void handleSaveTask() {
         String title = titleField.getText();
+        String description = descriptionField.getText();
         Category category = categoryField.getValue();
         PriorityLevel priority = priorityField.getValue();
         LocalDate deadline = deadlineField.getValue();
-        TaskStatus status = statusField.getValue();
+        TaskStatus status = (statusField.getValue() != null) ? statusField.getValue() : TaskStatus.OPEN;
 
         if (title == null || title.isEmpty() || category == null || priority == null || deadline == null || status == null) {
-            showAlert("Error", "Please fill in all fields.");
+            showAlert("Error", "Please fill in all fields.", Alert.AlertType.ERROR);
             return;
         }
 
-        newTask = new Task(title, "", category, priority, deadline, status);
-        Task.addTask(newTask);
+        newTask = new Task(title, description, category, priority, deadline, status);
 
+        showAlert("Success", "Task added successfully!", Alert.AlertType.INFORMATION);
         closeWindow();
     }
 
@@ -58,8 +63,8 @@ public class AddTaskController {
         stage.close();
     }
 
-    private void showAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
+    private void showAlert(String title, String message, Alert.AlertType type) {
+        Alert alert = new Alert(type);
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);

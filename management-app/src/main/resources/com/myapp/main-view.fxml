@@ -20,6 +20,7 @@
         <TableView fx:id="taskTable">
             <columns>
                 <TableColumn fx:id="titleColumn" text="Title" />
+                <TableColumn fx:id="descriptionColumn" text="Description" />
                 <TableColumn fx:id="categoryColumn" text="Category" />
                 <TableColumn fx:id="priorityColumn" text="Priority" />
                 <TableColumn fx:id="deadlineColumn" text="Deadline" />

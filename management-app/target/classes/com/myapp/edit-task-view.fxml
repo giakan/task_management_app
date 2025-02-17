@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="15" alignment="CENTER" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.myapp.EditTaskController">
+    <Label text="Edit Task" style="-fx-font-size: 16px;"/>
+
+    <TextField fx:id="titleField" promptText="Enter Task Title"/>
+    <TextField fx:id="descriptionField" promptText="Enter Task Description"/>
+    <ComboBox fx:id="categoryField" promptText="Select Category"/>
+    <ComboBox fx:id="priorityField" promptText="Select Priority"/>
+    <DatePicker fx:id="deadlineField"/>
+    <ComboBox fx:id="statusField" promptText="Select Status"/>
+    <Button text="Add Reminder" onAction="#handleAddReminder"/>
+    <Button text="Delete Reminder" onAction="#handleDeleteReminder"/>
+
+
+    <Button text="Save Changes" onAction="#handleSaveChanges"/>
+    <Button text="Cancel" onAction="#handleCancel"/>
+</VBox>

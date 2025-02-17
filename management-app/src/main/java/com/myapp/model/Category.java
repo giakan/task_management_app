@@ -12,9 +12,16 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class Category {
+
+    public Category() {
+    }
+
+    @JsonProperty("name")
     private String name;
-    private static final String FILE_PATH = "src/main/java/com/myapp/data/categories.json";
+    private static final String FILE_PATH = "medialab/categories.json";
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
     public Category(String name) {

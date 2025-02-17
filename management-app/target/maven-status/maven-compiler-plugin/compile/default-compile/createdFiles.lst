@@ -1,11 +1,16 @@
 com\myapp\model\Reminder.class
 com\myapp\data\TaskManager.class
 com\myapp\model\Category.class
+com\myapp\model\Category$2.class
 com\myapp\model\Task$1.class
+com\myapp\model\PriorityLevel$1.class
 com\myapp\model\TaskStatus.class
 com\myapp\model\Task.class
+com\myapp\model\Category$1.class
+com\myapp\model\PriorityLevel$2.class
 com\myapp\data\TaskManager$1.class
 com\myapp\MainApp.class
 com\myapp\MainController.class
 com\myapp\model\PriorityLevel.class
 com\myapp\utils\LocalDateAdapter.class
+com\myapp\AddTaskController.class

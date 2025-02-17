@@ -11,6 +11,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -22,6 +23,7 @@ public class MainController {
 
     @FXML private TableView<Task> taskTable;
     @FXML private TableColumn<Task, String> titleColumn;
+    @FXML private TableColumn<Task, String> descriptionColumn;
     @FXML private TableColumn<Task, String> categoryColumn;
     @FXML private TableColumn<Task, String> priorityColumn;
     @FXML private TableColumn<Task, String> deadlineColumn;
@@ -43,6 +45,7 @@ public class MainController {
 
         // Αρχικοποίηση των στηλών
         titleColumn.setCellValueFactory(new PropertyValueFactory<>("title"));
+        descriptionColumn.setCellValueFactory(new PropertyValueFactory<>("description"));
         categoryColumn.setCellValueFactory(new PropertyValueFactory<>("category"));
         priorityColumn.setCellValueFactory(new PropertyValueFactory<>("priority"));
         deadlineColumn.setCellValueFactory(new PropertyValueFactory<>("deadline"));
@@ -51,6 +54,17 @@ public class MainController {
         // Φορτώνουμε τα task
         taskList = FXCollections.observableArrayList(Task.getAllTasks());
         taskTable.setItems(taskList);
+
+        // Εκτελούμε τον έλεγχο σε ξεχωριστό thread για να μην καθυστερεί η εκκίνηση
+        new Thread(() -> {
+            try {
+                Thread.sleep(1000); // Καθυστέρηση 1s για πιο φυσική εμπειρία
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            Platform.runLater(this::checkForDelayedTasks);
+        }).start();
     }
 
     @FXML
@@ -69,8 +83,9 @@ public class MainController {
             Task newTask = controller.getNewTask();
         
             if (newTask != null) {
-                taskList.add(newTask);
-                taskTable.refresh();
+                Task.addTask(newTask); // Αποθήκευση στο JSON
+                taskList.add(newTask); // Προσθήκη στη λίστα
+                taskTable.refresh();   // Ανανεώνουμε τον πίνακα
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -82,29 +97,34 @@ public class MainController {
     @FXML
     private void handleEditTask() {
         Task selectedTask = taskTable.getSelectionModel().getSelectedItem();
+    
         if (selectedTask == null) {
-            showAlert("Error", "No task selected.",Alert.AlertType.ERROR);
+            showAlert("Error", "No task selected.", Alert.AlertType.ERROR);
             return;
         }
 
-        // Ενημέρωση του Task
-        boolean modified = Task.modifyTask(
-                selectedTask.getId(),
-                titleField.getText().isEmpty() ? selectedTask.getTitle() : titleField.getText(),
-                selectedTask.getDescription(),
-                categoryField.getValue() == null ? selectedTask.getCategory() : categoryField.getValue(),
-                priorityField.getValue() == null ? selectedTask.getPriority() : priorityField.getValue(),
-                deadlineField.getValue() == null ? selectedTask.getDeadline() : deadlineField.getValue(),
-                statusField.getValue() == null ? selectedTask.getStatus() : statusField.getValue()
-        );
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/myapp/edit-task-view.fxml"));
+            Parent root = loader.load();
 
-        if (modified) {
+            // Παίρνουμε τον Controller και περνάμε το επιλεγμένο Task
+            EditTaskController controller = loader.getController();
+            controller.setTaskData(selectedTask);
+
+            Stage stage = new Stage();
+            stage.setTitle("Edit Task");
+            stage.setScene(new Scene(root));
+            stage.showAndWait();
+
+            // Μετά το edit, ανανεώνουμε τον πίνακα
             taskTable.refresh();
-            //clearFields();
-        } else {
-            showAlert("Error", "Task modification failed.",Alert.AlertType.ERROR);
+            Task.saveTasksToJson();  // Ενημέρωση JSON
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert("Error", "Failed to open Edit Task window.", Alert.AlertType.ERROR);
         }
     }
+
 
     @FXML
     private void handleDeleteTask() {
@@ -151,22 +171,31 @@ public class MainController {
         List<Category> categories = Category.loadCategories();
 
         if (categories.isEmpty()) {
-            showAlert("Error", "There are no categories to delete.",Alert.AlertType.ERROR);
+            showAlert("Error", "There are no categories to delete.", Alert.AlertType.ERROR);
             return;
         }
 
-        // Δημιουργία διαλόγου για επιλογή κατηγορίας προς διαγραφή
         ChoiceDialog<Category> dialog = new ChoiceDialog<>(categories.get(0), categories);
         dialog.setTitle("Delete Category");
         dialog.setHeaderText("Select a category to delete:");
         dialog.setContentText("Category:");
 
         dialog.showAndWait().ifPresent(selectedCategory -> {
+            System.out.println("Deleting category: " + selectedCategory.getName());
+
+            // Διαγραφή της κατηγορίας
             categories.remove(selectedCategory);
             Category.saveCategories(categories);
 
-            // Αφαίρεση της κατηγορίας από το ComboBox στο UI
-            categoryField.getItems().remove(selectedCategory);
+            // Διαγραφή των tasks και reminders που έχουν αυτή την κατηγορία
+            int deletedCount = Task.deleteTasksByCategory(selectedCategory);
+            System.out.println("Deleted " + deletedCount + " tasks and their reminders.");
+
+            // Ενημέρωση UI
+            taskList.setAll(Task.getAllTasks());
+            taskTable.refresh();
+
+            showAlert("Success", deletedCount + " tasks and their reminders deleted along with the category.", Alert.AlertType.INFORMATION);
         });
     }
 
@@ -175,34 +204,53 @@ public class MainController {
     @FXML
     private void handleEditCategory(ActionEvent event) {
         List<Category> categories = Category.loadCategories();
-    
-        // Δημιουργία του διαλόγου με επιλογή κατηγορίας
-        ChoiceDialog<Category> choiceDialog = new ChoiceDialog<>(null, categories);
-        choiceDialog.setTitle("Edit Category");
-        choiceDialog.setHeaderText("Select a category to edit:");
-        choiceDialog.setContentText("Category:");
-    
-        choiceDialog.showAndWait().ifPresent(selectedCategory -> {
-            if (selectedCategory != null) {
-                TextInputDialog textInputDialog = new TextInputDialog(selectedCategory.getName());
-                textInputDialog.setTitle("Edit Category Name");
-                textInputDialog.setHeaderText("Enter new category name:");
-                textInputDialog.setContentText("New Name:");
-            
-                textInputDialog.showAndWait().ifPresent(newName -> {
-                    if (!newName.trim().isEmpty()) {
-                        // Ενημερώνουμε την υπάρχουσα κατηγορία
-                        selectedCategory.setName(newName);
-                        Category.saveCategories(categories);
-                    
-                        showAlert("Success", "Category updated successfully.",Alert.AlertType.INFORMATION);
-                    } else {
-                        showAlert("Error", "New name cannot be empty.",Alert.AlertType.ERROR);
-                    }
-                });
+
+        // Δημιουργία του διαλόγου για επιλογή της κατηγορίας προς επεξεργασία
+        ChoiceDialog<Category> dialog = new ChoiceDialog<>(null, categories);
+        dialog.setTitle("Edit Category");
+        dialog.setHeaderText("Select a category to edit:");
+        dialog.setContentText("Category:");
+
+        dialog.showAndWait().ifPresent(selectedCategory -> {
+            if (selectedCategory == null) {
+                showAlert("Error", "No category selected.", Alert.AlertType.ERROR);
+                return;
             }
+
+            // Ζητάμε νέο όνομα μέσω TextInputDialog
+            TextInputDialog inputDialog = new TextInputDialog(selectedCategory.getName());
+            inputDialog.setTitle("Edit Category");
+            inputDialog.setHeaderText("Enter new category name:");
+            inputDialog.setContentText("New Name:");
+
+            inputDialog.showAndWait().ifPresent(newName -> {
+                if (newName.trim().isEmpty()) {
+                    showAlert("Error", "New name cannot be empty.", Alert.AlertType.ERROR);
+                    return;
+                }
+
+                if (categories.stream().anyMatch(c -> c.getName().equals(newName))) {
+                    showAlert("Error", "Category name already exists.", Alert.AlertType.ERROR);
+                    return;
+                }
+
+                // Ενημέρωση της λίστας των Categories
+                String oldCategoryName = selectedCategory.getName();
+                selectedCategory.setName(newName);
+
+                // Ενημέρωση των Tasks που είχαν την παλιά κατηγορία
+                Task.updateCategoryForEdit(oldCategoryName, newName);
+
+                // Αποθήκευση των αλλαγών
+                Category.saveCategories(categories);
+                taskList.setAll(Task.getAllTasks()); // Ανανεώνουμε τη λίστα των tasks
+                taskTable.refresh();
+
+                showAlert("Success", "Category updated successfully!", Alert.AlertType.INFORMATION);
+            });
         });
     }
+
 
 
 
@@ -239,32 +287,47 @@ public class MainController {
         List<PriorityLevel> priorities = PriorityLevel.loadPriorities();
 
         if (priorities.isEmpty()) {
-            showAlert("Error", "No priorities available to delete.",Alert.AlertType.ERROR);
+            showAlert("Error", "No priorities available to delete.", Alert.AlertType.ERROR);
             return;
         }
 
-        // Δημιουργία διαλόγου με drop-down για τις διαθέσιμες προτεραιότητες
+        // Δημιουργία διαλόγου με drop-down για επιλογή προτεραιότητας προς διαγραφή
         ChoiceDialog<PriorityLevel> dialog = new ChoiceDialog<>(priorities.get(0), priorities);
         dialog.setTitle("Delete Priority");
         dialog.setHeaderText("Select a priority to delete:");
         dialog.setContentText("Priority:");
 
         dialog.showAndWait().ifPresent(selectedPriority -> {
-            priorities.remove(selectedPriority);
+            if (selectedPriority.getName().equals(PriorityLevel.DEFAULT_PRIORITY)) {
+                showAlert("Error", "Cannot delete the Default priority.", Alert.AlertType.ERROR);
+                return;
+            }
+
+            System.out.println("Deleting priority: " + selectedPriority.getName()); // Debugging
+
+            // Αντικατάσταση όλων των σχετικών tasks με Default
+            Task.updatePriorityForDeleted(selectedPriority);
+
+            // Αφαίρεση της προτεραιότητας από τη λίστα
+            priorities.removeIf(p -> p.getName().equals(selectedPriority.getName()));
             PriorityLevel.savePriorities(priorities);
 
-            // Αν υπάρχει το priorityField στο Add Task, αφαιρούμε το επιλεγμένο
-            if (priorityField != null) {
-                priorityField.getItems().remove(selectedPriority);
-            }
+            // Ενημέρωση UI
+            taskList.setAll(Task.getAllTasks());
+            taskTable.refresh();
+            priorityField.getItems().remove(selectedPriority);
+
+            showAlert("Success", "Priority deleted and tasks updated successfully.", Alert.AlertType.INFORMATION);
         });
     }
 
 
     @FXML
     private void handleEditPriority(ActionEvent event) {
-        // Φτιάχνουμε το Dialog για την επιλογή της προτεραιότητας προς επεξεργασία
-        ChoiceDialog<PriorityLevel> dialog = new ChoiceDialog<>(null, PriorityLevel.loadPriorities());
+        List<PriorityLevel> priorities = PriorityLevel.loadPriorities();
+
+        // Δημιουργία του διαλόγου για επιλογή της προτεραιότητας προς επεξεργασία
+        ChoiceDialog<PriorityLevel> dialog = new ChoiceDialog<>(null, priorities);
         dialog.setTitle("Edit Priority");
         dialog.setHeaderText("Select a priority to edit:");
         dialog.setContentText("Priority:");
@@ -272,6 +335,11 @@ public class MainController {
         dialog.showAndWait().ifPresent(selectedPriority -> {
             if (selectedPriority == null) {
                 showAlert("Error", "No priority selected.", Alert.AlertType.ERROR);
+                return;
+            }
+
+            if (selectedPriority.getName().equals(PriorityLevel.DEFAULT_PRIORITY)) {
+                showAlert("Error", "Cannot edit the Default priority.", Alert.AlertType.ERROR);
                 return;
             }
 
@@ -285,24 +353,39 @@ public class MainController {
                 if (newName.trim().isEmpty()) {
                     showAlert("Error", "New name cannot be empty.", Alert.AlertType.ERROR);
                     return;
+                }   
+                if (priorities.stream().anyMatch(p -> p.getName().equals(newName))) {
+                    showAlert("Error", "Priority name already exists.", Alert.AlertType.ERROR);
+                    return;
                 }
 
-                // Ενημερώνουμε τη λίστα
-                List<PriorityLevel> priorities = PriorityLevel.loadPriorities();
-                for (PriorityLevel priority : priorities) {
-                    if (priority.getName().equals(selectedPriority.getName())) {
-                        priority.setName(newName); // Αλλάζουμε το όνομα μόνο
-                        break;
-                    }
-                }
+                // Ενημέρωση της λίστας των Priorities
+                String oldPriorityName = selectedPriority.getName();
+                selectedPriority.setName(newName);
 
-                // Αποθηκεύουμε τις αλλαγές
+                // Ενημέρωση των Tasks που είχαν την παλιά προτεραιότητα
+                Task.updatePriorityForEdit(oldPriorityName, newName);
+
+                // Αποθήκευση των αλλαγών
                 PriorityLevel.savePriorities(priorities);
-                showAlert("Success", "Priority updated successfully!", Alert.AlertType.INFORMATION);
-        });
-    });
-}
+                taskList.setAll(Task.getAllTasks()); // Ανανεώνουμε τη λίστα των tasks
+                taskTable.refresh();
 
+                showAlert("Success", "Priority updated successfully!", Alert.AlertType.INFORMATION);
+            });
+        });
+    }
+
+    private void checkForDelayedTasks() {
+        int delayedCount = Task.getDelayedTasksCount();
+    
+        if (delayedCount > 0) {
+            showAlert("Delayed Tasks", 
+                      "There are " + delayedCount + " overdue tasks!", 
+                      Alert.AlertType.WARNING);
+        }
+    }
+    
 
     private void showAlert(String title, String message, Alert.AlertType type) {
         Alert alert = new Alert(type);

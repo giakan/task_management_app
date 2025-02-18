@@ -23,6 +23,7 @@ import javafx.event.ActionEvent;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public class MainController {
 
@@ -437,8 +438,8 @@ public class MainController {
             return;
         }
 
-        // Δημιουργία TableView για τα reminders
         TableView<Reminder> reminderTable = new TableView<>();
+        this.reminderTable = reminderTable; // Αποθηκεύουμε τη reference για ανανέωση
 
         TableColumn<Reminder, String> taskColumn = new TableColumn<>("Task");
         taskColumn.setCellValueFactory(cellData -> new SimpleStringProperty(getTaskTitle(cellData.getValue().getTaskId())));
@@ -455,17 +456,18 @@ public class MainController {
         reminderTable.getColumns().addAll(taskColumn, deadlineColumn, typeColumn, commentColumn);
         reminderTable.setItems(FXCollections.observableArrayList(reminders));
 
-        // Κουμπί "Edit Reminder"
-        Button editButton = new Button("Edit Reminder");
-        editButton.setOnAction(e -> handleEditReminder(reminderTable.getSelectionModel().getSelectedItem()));
+        // Δημιουργία παραθύρου
+        Stage popupStage = new Stage();
+        popupStage.setTitle("All Reminders");
 
-        // Κουμπί "Delete Reminder"
+        // Edit Reminder
+        Button editButton = new Button("Edit Reminder");
+        editButton.setOnAction(e -> handleEditReminder(reminderTable.getSelectionModel().getSelectedItem(), popupStage));
+
+        // Delete Reminder
         Button deleteButton = new Button("Delete Reminder");
         deleteButton.setOnAction(e -> handleDeleteReminder(reminderTable.getSelectionModel().getSelectedItem(), reminderTable));
 
-        // Δημιουργία popup παραθύρου
-        Stage popupStage = new Stage();
-        popupStage.setTitle("All Reminders");
         VBox layout = new VBox(10);
         layout.getChildren().addAll(reminderTable, editButton, deleteButton);
         layout.setPadding(new Insets(10));
@@ -474,6 +476,7 @@ public class MainController {
         popupStage.setScene(scene);
         popupStage.show();
     }
+
 
     private void handleDeleteReminder(Reminder selectedReminder, TableView<Reminder> reminderTable) {
         if (selectedReminder == null) {
@@ -501,55 +504,65 @@ public class MainController {
     }
     
 
-    private void handleEditReminder(Reminder selectedReminder) {
+    private void handleEditReminder(Reminder selectedReminder, Stage popupStage) {
         if (selectedReminder == null) {
             showAlert("Error", "No reminder selected.", Alert.AlertType.ERROR);
             return;
         }
     
-        // Δημιουργία παραθύρου επεξεργασίας
         Dialog<Reminder> dialog = new Dialog<>();
         dialog.setTitle("Edit Reminder");
         dialog.setHeaderText("Modify the reminder details:");
     
-        // Επιλογές τύπου υπενθύμισης
         ChoiceBox<String> reminderTypeChoice = new ChoiceBox<>();
         reminderTypeChoice.getItems().addAll("One Day Before", "One Week Before", "One Month Before", "Custom Date");
         reminderTypeChoice.setValue(getReminderType(selectedReminder.getReminderDate(), selectedReminder.getTaskId()));
     
-        // Εισαγωγή σχολίου
         TextField commentField = new TextField(selectedReminder.getComment());
     
-        // Διάταξη
         VBox layout = new VBox(10);
         layout.getChildren().addAll(new Label("Reminder Type:"), reminderTypeChoice, new Label("Comment:"), commentField);
         dialog.getDialogPane().setContent(layout);
     
-        // Προσθήκη κουμπιών "OK" και "Cancel"
         ButtonType saveButtonType = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
     
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == saveButtonType) {
                 LocalDate newDate = calculateNewDate(reminderTypeChoice.getValue(), selectedReminder.getTaskId());
+    
+                // Ενημέρωση του reminder
                 selectedReminder.setReminderDate(newDate);
                 selectedReminder.setComment(commentField.getText());
+    
+                // Αποθήκευση αλλαγών
                 Reminder.saveRemindersToJson();
-
-                // Ενημέρωση του πίνακα
-                reminderTable.setItems(FXCollections.observableArrayList(Reminder.getAllReminders()));
-                reminderTable.refresh();
-
+                
                 return selectedReminder;
             }
             return null;
         });
     
-        dialog.showAndWait();
+        Optional<Reminder> result = dialog.showAndWait();
     
-        // Ενημέρωση του popup
-        handleViewReminders();
+        // Αν έγινε αλλαγή, κλείνουμε και ξανανοίγουμε το παράθυρο reminders
+        result.ifPresent(updatedReminder -> {
+            popupStage.close();
+            handleViewReminders(); // Ξανανοίγουμε το ανανεωμένο popup
+        });
     }
+    
+    
+    
+    private void refreshReminderTable() {
+        if (reminderTable != null) {
+            ObservableList<Reminder> reminders = FXCollections.observableArrayList(Reminder.getAllReminders());
+            reminderTable.setItems(reminders);
+            reminderTable.refresh();
+        }
+    }
+    
+    
 
     private LocalDate calculateNewDate(String selectedType, int taskId) {
         LocalDate deadline = getTaskDeadline(taskId);

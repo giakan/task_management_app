@@ -12,15 +12,30 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.Separator?>
+
 
 
 <BorderPane xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.myapp.MainController">
 
     <!-- Πάνω μέρος: Τίτλος εφαρμογής -->
     <top>
-        <VBox>
-            <Label style="-fx-font-size: 20px; -fx-padding: 10px;" text="Task Management System" />
+        <VBox spacing="10">
+            <!-- Τίτλος Εφαρμογής -->
+            <Label style="-fx-font-size: 20px; -fx-padding: 10px;" text="MediaLab Assistant" />
 
+            <!-- Συγκεντρωτικές πληροφορίες -->
+            <HBox spacing="20" alignment="CENTER">
+                <Label fx:id="totalTasksLabel" text="Total Tasks: 0" styleClass="stats-box"/>
+                <Label fx:id="completedTasksLabel" text="Completed Tasks: 0" styleClass="stats-box"/>
+                <Label fx:id="delayedTasksLabel" text="Delayed Tasks: 0" styleClass="stats-box"/>
+                <Label fx:id="upcomingTasksLabel" text="Upcoming Tasks: 0" styleClass="stats-box"/>
+            </HBox>
+
+            <Separator/>
+
+
+            <!-- Πεδίο Αναζήτησης -->
             <HBox spacing="10" alignment="CENTER">
                 <TextField fx:id="searchTitleField" promptText="Search by Title"/>
                 <ComboBox fx:id="searchCategoryField" promptText="Filter by Category"/>
@@ -30,6 +45,7 @@
             </HBox>
         </VBox>
     </top>
+
 
     <!-- Κεντρικό περιεχόμενο: Πίνακας με τις εργασίες -->
     <center>
@@ -47,35 +63,38 @@
 
     <!-- Μενού ενεργειών -->
     <bottom>
-        <MenuBar prefHeight="25.0" prefWidth="262.0">
+    <HBox alignment="CENTER" spacing="10" style="-fx-background-color: #2c3e50; -fx-padding: 10px;">
+        <MenuBar fx:id="menuBar">
             <menus>
-                <Menu mnemonicParsing="false" text="Task">
+                <Menu text="Task">
                     <items>
-                        <MenuItem fx:id="addTask" mnemonicParsing="false" text="Add" onAction="#handleAddTask" />
-                        <MenuItem fx:id="deleteTask" mnemonicParsing="false" text="Delete" onAction="#handleDeleteTask" />
-                        <MenuItem fx:id="modifyTask" mnemonicParsing="false" text="Edit" onAction="#handleEditTask" />
+                        <MenuItem text="Add" onAction="#handleAddTask"/>
+                        <MenuItem text="Delete" onAction="#handleDeleteTask"/>
+                        <MenuItem text="Edit" onAction="#handleEditTask"/>
                     </items>
                 </Menu>
-                <Menu mnemonicParsing="false" text="Categories">
+                <Menu text="Categories">
                     <items>
-                        <MenuItem fx:id="addCategory" mnemonicParsing="false" text="Add" onAction="#handleAddCategory" />
-                        <MenuItem fx:id="deleteCategory" mnemonicParsing="false" text="Delete" onAction="#handleDeleteCategory" />
-                        <MenuItem fx:id="modifyCategory" mnemonicParsing="false" text="Edit" onAction="#handleEditCategory" />
+                        <MenuItem text="Add" onAction="#handleAddCategory"/>
+                        <MenuItem text="Delete" onAction="#handleDeleteCategory"/>
+                        <MenuItem text="Edit" onAction="#handleEditCategory"/>
                     </items>
                 </Menu>
-                <Menu mnemonicParsing="false" text="Priorities">
+                <Menu text="Priorities">
                     <items>
-                        <MenuItem fx:id="addPriority" mnemonicParsing="false" text="Add" onAction="#handleAddPriority" />
-                        <MenuItem fx:id="deletePriority" mnemonicParsing="false" text="Delete" onAction="#handleDeletePriority" />
-                        <MenuItem fx:id="modifyPriority" mnemonicParsing="false" text="Edit" onAction="#handleEditPriority" />
+                        <MenuItem text="Add" onAction="#handleAddPriority"/>
+                        <MenuItem text="Delete" onAction="#handleDeletePriority"/>
+                        <MenuItem text="Edit" onAction="#handleEditPriority"/>
                     </items>
                 </Menu>
-                <Menu mnemonicParsing="false" text="Reminders">
+                <Menu text="Reminders">
                     <items>
-                        <MenuItem fx:id="viewReminders" mnemonicParsing="false" text="View Reminders" onAction="#handleViewReminders" />
+                        <MenuItem text="View Reminders" onAction="#handleViewReminders"/>
                     </items>
                 </Menu>
             </menus>
         </MenuBar>
-    </bottom>
+    </HBox>
+</bottom>
+
 </BorderPane>

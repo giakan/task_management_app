@@ -12,6 +12,7 @@ import java.util.Optional;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class Task {
     private static List<Task> taskList = new ArrayList<>();
@@ -76,6 +77,13 @@ public class Task {
     public TaskStatus getStatus() {
         return status;
     }
+
+    @JsonIgnore
+    public boolean isDelayed() {
+        //return this.deadline != null && this.deadline.isBefore(LocalDate.now()) && this.status != TaskStatus.COMPLETED;
+        return this.status == TaskStatus.DELAYED;
+    }
+    
 
     // Setters
     public void setTitle(String title) {

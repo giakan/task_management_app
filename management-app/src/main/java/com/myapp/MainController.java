@@ -26,6 +26,11 @@ import java.util.List;
 
 public class MainController {
 
+    @FXML private Label totalTasksLabel;
+    @FXML private Label completedTasksLabel;
+    @FXML private Label delayedTasksLabel;
+    @FXML private Label upcomingTasksLabel;
+
     @FXML private TableView<Task> taskTable;
     @FXML private TableColumn<Task, String> titleColumn;
     @FXML private TableColumn<Task, String> descriptionColumn;
@@ -50,6 +55,8 @@ public class MainController {
     @FXML
     public void initialize() {
 
+        
+
         // Φόρτωση των tasks από JSON
         Task.loadTasksFromJson();
         Reminder.loadRemindersFromJson(); // Φόρτωση υπενθυμίσεων από JSON
@@ -66,7 +73,6 @@ public class MainController {
         searchCategoryField.getItems().add(0, null);
         searchPriorityField.getItems().add(0, null);
 
-
         // Αρχικοποίηση των στηλών
         titleColumn.setCellValueFactory(new PropertyValueFactory<>("title"));
         descriptionColumn.setCellValueFactory(new PropertyValueFactory<>("description"));
@@ -75,9 +81,7 @@ public class MainController {
         deadlineColumn.setCellValueFactory(new PropertyValueFactory<>("deadline"));
         statusColumn.setCellValueFactory(new PropertyValueFactory<>("status")); 
 
-        // Φορτώνουμε τα task
-        taskList = FXCollections.observableArrayList(Task.getAllTasks());
-        taskTable.setItems(taskList);
+        updateTaskStatistics();
 
         // Εκτελούμε τον έλεγχο σε ξεχωριστό thread για να μην καθυστερεί η εκκίνηση
         new Thread(() -> {
@@ -91,8 +95,27 @@ public class MainController {
         }).start();
     }
 
+    private void updateTaskStatistics() {
+        List<Task> allTasks = Task.getAllTasks();
+        int totalTasks = allTasks.size();
+        int completedTasks = (int) allTasks.stream().filter(task -> task.getStatus().equals(TaskStatus.COMPLETED)).count();
+        int delayedTasks = (int) allTasks.stream().filter(Task::isDelayed).count();
+        int upcomingTasks = (int) allTasks.stream()
+                                .filter(task -> task.getDeadline() != null && 
+                                        task.getDeadline().isAfter(LocalDate.now()) &&
+                                        task.getDeadline().isBefore(LocalDate.now().plusDays(7)))
+                                .count();
+    
+        totalTasksLabel.setText("Total Tasks: " + totalTasks);
+        completedTasksLabel.setText("Completed Tasks: " + completedTasks);
+        delayedTasksLabel.setText("Delayed Tasks: " + delayedTasks);
+        upcomingTasksLabel.setText("Upcoming Tasks: " + upcomingTasks);
+    }
+    
+
     @FXML
     private void handleAddTask() {
+
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/myapp/add-task-view.fxml"));
             Parent root = loader.load();
@@ -110,6 +133,7 @@ public class MainController {
                 Task.addTask(newTask); // Αποθήκευση στο JSON
                 taskList.add(newTask); // Προσθήκη στη λίστα
                 taskTable.refresh();   // Ανανεώνουμε τον πίνακα
+                updateTaskStatistics();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -143,6 +167,7 @@ public class MainController {
             // Μετά το edit, ανανεώνουμε τον πίνακα
             taskTable.refresh();
             Task.saveTasksToJson();  // Ενημέρωση JSON
+            updateTaskStatistics();
         } catch (Exception e) {
             e.printStackTrace();
             showAlert("Error", "Failed to open Edit Task window.", Alert.AlertType.ERROR);
@@ -161,6 +186,7 @@ public class MainController {
         boolean deleted = Task.deleteTask(selectedTask.getId());
         if (deleted) {
             taskList.remove(selectedTask);
+            updateTaskStatistics();
         } else {
             showAlert("Error", "Task deletion failed.",Alert.AlertType.ERROR);
         }

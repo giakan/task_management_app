@@ -54,6 +54,11 @@
                         <MenuItem fx:id="modifyPriority" mnemonicParsing="false" text="Edit" onAction="#handleEditPriority" />
                     </items>
                 </Menu>
+                <Menu mnemonicParsing="false" text="Reminders">
+                    <items>
+                        <MenuItem fx:id="viewReminders" mnemonicParsing="false" text="View Reminders" onAction="#handleViewReminders" />
+                    </items>
+                </Menu>
             </menus>
         </MenuBar>
     </bottom>

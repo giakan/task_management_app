@@ -13,9 +13,8 @@
     <ComboBox fx:id="priorityField" promptText="Select Priority"/>
     <DatePicker fx:id="deadlineField"/>
     <ComboBox fx:id="statusField" promptText="Select Status"/>
-    <Button text="Add Reminder" onAction="#handleAddReminder"/>
-    <Button text="Delete Reminder" onAction="#handleDeleteReminder"/>
 
+    <Button text="Add Reminder" onAction="#handleAddReminder"/>
 
     <Button text="Save Changes" onAction="#handleSaveChanges"/>
     <Button text="Cancel" onAction="#handleCancel"/>

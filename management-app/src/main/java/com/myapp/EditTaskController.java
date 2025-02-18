@@ -107,36 +107,20 @@ public class EditTaskController {
                 return;
             }
 
-            Reminder newReminder = new Reminder(taskToEdit.getId(), reminderDate);
+            // Προσθήκη διαλόγου για σχόλιο
+            TextInputDialog commentDialog = new TextInputDialog();
+            commentDialog.setTitle("Add Comment");
+            commentDialog.setHeaderText("Enter a comment for this reminder (optional):");
+            commentDialog.setContentText("Comment:");
+
+            String comment = commentDialog.showAndWait().orElse(""); // Αν δεν πληκτρολογηθεί κάτι, μένει κενό
+
+            // Δημιουργία υπενθύμισης με σχόλιο
+            Reminder newReminder = new Reminder(taskToEdit.getId(), reminderDate, comment);
             Reminder.addReminder(newReminder);
             showAlert("Success", "Reminder added successfully!", Alert.AlertType.INFORMATION);
         });
     }
-
-    @FXML
-    private void handleDeleteReminder() {
-        if (taskToEdit == null) {
-            showAlert("Error", "No task selected.", Alert.AlertType.ERROR);
-            return;
-        }
-
-        List<Reminder> taskReminders = Reminder.getRemindersForTask(taskToEdit.getId());
-        if (taskReminders.isEmpty()) {
-            showAlert("Error", "No reminders found for this task.", Alert.AlertType.ERROR);
-            return;
-        }
-
-        ChoiceDialog<Reminder> dialog = new ChoiceDialog<>(taskReminders.get(0), taskReminders);
-        dialog.setTitle("Delete Reminder");
-        dialog.setHeaderText("Select a reminder to delete:");
-        dialog.setContentText("Reminder:");
-
-        dialog.showAndWait().ifPresent(selectedReminder -> {
-            Reminder.deleteReminder(selectedReminder.getId());
-            showAlert("Success", "Reminder deleted successfully.", Alert.AlertType.INFORMATION);
-        });
-    }
-
 
 
     @FXML

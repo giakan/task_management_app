@@ -3,15 +3,20 @@ package com.myapp;
 import com.myapp.model.Task;
 import com.myapp.model.Category;
 import com.myapp.model.PriorityLevel;
+import com.myapp.model.Reminder;
 import com.myapp.model.TaskStatus;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.application.Platform;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -42,6 +47,8 @@ public class MainController {
 
         // Φόρτωση των tasks από JSON
         Task.loadTasksFromJson();
+        Reminder.loadRemindersFromJson(); // Φόρτωση υπενθυμίσεων από JSON
+
 
         // Αρχικοποίηση των στηλών
         titleColumn.setCellValueFactory(new PropertyValueFactory<>("title"));
@@ -375,6 +382,177 @@ public class MainController {
             });
         });
     }
+
+    private TableView<Reminder> reminderTable; // Κρατάμε το table global
+
+    @FXML
+    private void handleViewReminders() {
+        List<Reminder> reminders = Reminder.getAllReminders();
+
+        if (reminders.isEmpty()) {
+            showAlert("No Reminders", "There are no reminders available.", Alert.AlertType.INFORMATION);
+            return;
+        }
+
+        // Δημιουργία TableView για τα reminders
+        TableView<Reminder> reminderTable = new TableView<>();
+
+        TableColumn<Reminder, String> taskColumn = new TableColumn<>("Task");
+        taskColumn.setCellValueFactory(cellData -> new SimpleStringProperty(getTaskTitle(cellData.getValue().getTaskId())));
+
+        TableColumn<Reminder, LocalDate> deadlineColumn = new TableColumn<>("Deadline");
+        deadlineColumn.setCellValueFactory(cellData -> new SimpleObjectProperty<>(getTaskDeadline(cellData.getValue().getTaskId())));
+
+        TableColumn<Reminder, String> typeColumn = new TableColumn<>("Reminder Type");
+        typeColumn.setCellValueFactory(cellData -> new SimpleStringProperty(getReminderType(cellData.getValue().getReminderDate(), cellData.getValue().getTaskId())));
+
+        TableColumn<Reminder, String> commentColumn = new TableColumn<>("Comment");
+        commentColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getComment()));
+
+        reminderTable.getColumns().addAll(taskColumn, deadlineColumn, typeColumn, commentColumn);
+        reminderTable.setItems(FXCollections.observableArrayList(reminders));
+
+        // Κουμπί "Edit Reminder"
+        Button editButton = new Button("Edit Reminder");
+        editButton.setOnAction(e -> handleEditReminder(reminderTable.getSelectionModel().getSelectedItem()));
+
+        // Κουμπί "Delete Reminder"
+        Button deleteButton = new Button("Delete Reminder");
+        deleteButton.setOnAction(e -> handleDeleteReminder(reminderTable.getSelectionModel().getSelectedItem(), reminderTable));
+
+        // Δημιουργία popup παραθύρου
+        Stage popupStage = new Stage();
+        popupStage.setTitle("All Reminders");
+        VBox layout = new VBox(10);
+        layout.getChildren().addAll(reminderTable, editButton, deleteButton);
+        layout.setPadding(new Insets(10));
+
+        Scene scene = new Scene(layout, 600, 400);
+        popupStage.setScene(scene);
+        popupStage.show();
+    }
+
+    private void handleDeleteReminder(Reminder selectedReminder, TableView<Reminder> reminderTable) {
+        if (selectedReminder == null) {
+            showAlert("Error", "No reminder selected.", Alert.AlertType.ERROR);
+            return;
+        }
+    
+        Alert confirmationAlert = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmationAlert.setTitle("Delete Reminder");
+        confirmationAlert.setHeaderText("Are you sure you want to delete this reminder?");
+        confirmationAlert.setContentText("Reminder: " + selectedReminder.getComment());
+    
+        confirmationAlert.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                boolean deleted = Reminder.deleteReminder(selectedReminder.getId());
+                if (deleted) {
+                    showAlert("Success", "Reminder deleted successfully.", Alert.AlertType.INFORMATION);
+                    reminderTable.setItems(FXCollections.observableArrayList(Reminder.getAllReminders())); // Ενημέρωση
+                    reminderTable.refresh();
+                } else {
+                    showAlert("Error", "Failed to delete reminder.", Alert.AlertType.ERROR);
+                }
+            }
+        });
+    }
+    
+
+    private void handleEditReminder(Reminder selectedReminder) {
+        if (selectedReminder == null) {
+            showAlert("Error", "No reminder selected.", Alert.AlertType.ERROR);
+            return;
+        }
+    
+        // Δημιουργία παραθύρου επεξεργασίας
+        Dialog<Reminder> dialog = new Dialog<>();
+        dialog.setTitle("Edit Reminder");
+        dialog.setHeaderText("Modify the reminder details:");
+    
+        // Επιλογές τύπου υπενθύμισης
+        ChoiceBox<String> reminderTypeChoice = new ChoiceBox<>();
+        reminderTypeChoice.getItems().addAll("One Day Before", "One Week Before", "One Month Before", "Custom Date");
+        reminderTypeChoice.setValue(getReminderType(selectedReminder.getReminderDate(), selectedReminder.getTaskId()));
+    
+        // Εισαγωγή σχολίου
+        TextField commentField = new TextField(selectedReminder.getComment());
+    
+        // Διάταξη
+        VBox layout = new VBox(10);
+        layout.getChildren().addAll(new Label("Reminder Type:"), reminderTypeChoice, new Label("Comment:"), commentField);
+        dialog.getDialogPane().setContent(layout);
+    
+        // Προσθήκη κουμπιών "OK" και "Cancel"
+        ButtonType saveButtonType = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
+    
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == saveButtonType) {
+                LocalDate newDate = calculateNewDate(reminderTypeChoice.getValue(), selectedReminder.getTaskId());
+                selectedReminder.setReminderDate(newDate);
+                selectedReminder.setComment(commentField.getText());
+                Reminder.saveRemindersToJson();
+
+                // Ενημέρωση του πίνακα
+                reminderTable.setItems(FXCollections.observableArrayList(Reminder.getAllReminders()));
+                reminderTable.refresh();
+
+                return selectedReminder;
+            }
+            return null;
+        });
+    
+        dialog.showAndWait();
+    
+        // Ενημέρωση του popup
+        handleViewReminders();
+    }
+
+    private LocalDate calculateNewDate(String selectedType, int taskId) {
+        LocalDate deadline = getTaskDeadline(taskId);
+        if (deadline == null) return LocalDate.now();
+    
+        switch (selectedType) {
+            case "One Day Before":
+                return deadline.minusDays(1);
+            case "One Week Before":
+                return deadline.minusWeeks(1);
+            case "One Month Before":
+                return deadline.minusMonths(1);
+            default:
+                return deadline;
+        }
+    }
+    
+    // Μέθοδος για να επιστρέφει τον τίτλο του task από το ID του
+    private String getTaskTitle(int taskId) {
+        return Task.getAllTasks().stream()
+            .filter(task -> task.getId() == taskId)
+            .map(Task::getTitle)
+            .findFirst()
+            .orElse("Unknown Task");
+    }
+
+    // Μέθοδος για να επιστρέφει το deadline του task από το ID του
+    private LocalDate getTaskDeadline(int taskId) {
+        return Task.getAllTasks().stream()
+            .filter(task -> task.getId() == taskId)
+            .map(Task::getDeadline)
+            .findFirst()
+            .orElse(null);
+    }
+
+    // Μέθοδος για να καθορίζει τον τύπο της υπενθύμισης
+    private String getReminderType(LocalDate reminderDate, int taskId) {
+        LocalDate deadline = getTaskDeadline(taskId);
+        if (deadline == null) return "Unknown";
+
+        if (reminderDate.equals(deadline.minusDays(1))) return "One Day Before";
+        if (reminderDate.equals(deadline.minusWeeks(1))) return "One Week Before";
+        if (reminderDate.equals(deadline.minusMonths(1))) return "One Month Before";
+        return "Custom Date";
+    }
+
 
     private void checkForDelayedTasks() {
         int delayedCount = Task.getDelayedTasksCount();

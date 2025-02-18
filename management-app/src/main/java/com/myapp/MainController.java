@@ -40,6 +40,11 @@ public class MainController {
     @FXML private DatePicker deadlineField;
     @FXML private ComboBox<TaskStatus> statusField;
 
+    @FXML private TextField searchTitleField;
+    @FXML private ComboBox<Category> searchCategoryField;
+    @FXML private ComboBox<PriorityLevel> searchPriorityField;
+
+
     private ObservableList<Task> taskList;
 
     @FXML
@@ -48,6 +53,18 @@ public class MainController {
         // Φόρτωση των tasks από JSON
         Task.loadTasksFromJson();
         Reminder.loadRemindersFromJson(); // Φόρτωση υπενθυμίσεων από JSON
+
+        // Αρχικοποίηση της λίστας εργασιών
+        taskList = FXCollections.observableArrayList(Task.getAllTasks());
+        taskTable.setItems(taskList);
+
+        // Αρχικοποίηση κατηγοριών και προτεραιοτήτων στα φίλτρα αναζήτησης
+        searchCategoryField.setItems(FXCollections.observableArrayList(Category.loadCategories()));
+        searchPriorityField.setItems(FXCollections.observableArrayList(PriorityLevel.loadPriorities()));
+
+        // Προσθήκη επιλογής "All" στις λίστες
+        searchCategoryField.getItems().add(0, null);
+        searchPriorityField.getItems().add(0, null);
 
 
         // Αρχικοποίηση των στηλών
@@ -563,7 +580,32 @@ public class MainController {
                       Alert.AlertType.WARNING);
         }
     }
-    
+
+    @FXML
+    private void handleSearchTasks() {
+        String searchTitle = searchTitleField.getText().toLowerCase().trim();
+        Category selectedCategory = searchCategoryField.getValue();
+        PriorityLevel selectedPriority = searchPriorityField.getValue();
+
+        List<Task> filteredTasks = Task.getAllTasks().stream()
+            .filter(task -> searchTitle.isEmpty() || task.getTitle().toLowerCase().contains(searchTitle))
+            .filter(task -> selectedCategory == null || task.getCategory().getName().equals(selectedCategory.getName()))
+            .filter(task -> selectedPriority == null || task.getPriority().getName().equals(selectedPriority.getName()))
+            .toList();
+
+        taskList.setAll(filteredTasks);
+        taskTable.refresh();
+    }
+
+    @FXML
+    private void handleResetSearch() {
+        searchTitleField.clear();
+        searchCategoryField.setValue(null);
+        searchPriorityField.setValue(null);
+
+        taskList.setAll(Task.getAllTasks());
+        taskTable.refresh();
+    }
 
     private void showAlert(String title, String message, Alert.AlertType type) {
         Alert alert = new Alert(type);

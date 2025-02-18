@@ -6,13 +6,29 @@
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
 
 <BorderPane xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.myapp.MainController">
 
     <!-- Πάνω μέρος: Τίτλος εφαρμογής -->
     <top>
-        <Label style="-fx-font-size: 20px; -fx-padding: 10px;" text="Task Management System" />
+        <VBox>
+            <Label style="-fx-font-size: 20px; -fx-padding: 10px;" text="Task Management System" />
+
+            <HBox spacing="10" alignment="CENTER">
+                <TextField fx:id="searchTitleField" promptText="Search by Title"/>
+                <ComboBox fx:id="searchCategoryField" promptText="Filter by Category"/>
+                <ComboBox fx:id="searchPriorityField" promptText="Filter by Priority"/>
+                <Button text="Search" onAction="#handleSearchTasks"/>
+                <Button text="Reset" onAction="#handleResetSearch"/>
+            </HBox>
+        </VBox>
     </top>
 
     <!-- Κεντρικό περιεχόμενο: Πίνακας με τις εργασίες -->
